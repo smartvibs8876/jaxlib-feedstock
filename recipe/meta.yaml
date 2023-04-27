@@ -55,6 +55,7 @@ requirements:
     - python {{ python }}
     - pip
     - numpy {{ numpy }}
+    - libopenblas {{ openblas }}
     - wheel
     # list libabseil here to ensure pinning correctly
     - libabseil {{ abseil_cpp }}
