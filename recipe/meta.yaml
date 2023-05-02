@@ -66,9 +66,10 @@ requirements:
   run:
     - python
     - {{ pin_compatible('numpy') }}
-    - scipy >=1.5
+    - scipy {{ scipy }}
     - re2
     - c-ares
+    - libopenblas {{ openblas }}
     - nccl {{ nccl }}      #[build_type == 'cuda']
     - ml_dtypes >=0.0.3
       #- __cuda  # [cuda_compiler_version != "None"]
