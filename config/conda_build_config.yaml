@@ -1,0 +1,4 @@
+c_compiler_version:
+  - 9.3.*          # [cudatoolkit == "11.2"]
+cxx_compiler_version:
+  - 9.3.*          # [cudatoolkit == "11.2"]

@@ -19,6 +19,8 @@ build --toolchain_resolution_debug
 build --define=PREFIX=${PREFIX}
 build --define=PROTOBUF_INCLUDE_PATH=${PREFIX}/include
 build --local_cpu_resources=${CPU_COUNT}"
+build --copt="-fplt"
+build --cxxopt="-fplt"
 EOF
 
 if [[ "${target_platform}" == "osx-arm64" ]]; then
@@ -40,23 +42,24 @@ if [[ "${cuda_compiler_version:-None}" != "None" ]]; then
         export TF_CUDA_COMPUTE_CAPABILITIES=sm_35,sm_50,sm_60,sm_62,sm_70,sm_72,sm_75,sm_80,compute_80
     elif [[ ${cuda_compiler_version} == 11.1 ]]; then
         export TF_CUDA_COMPUTE_CAPABILITIES=sm_35,sm_50,sm_60,sm_62,sm_70,sm_72,sm_75,sm_80,sm_86,compute_86
-    elif [[ ${cuda_compiler_version} == 11.2 ]]; then
-        export TF_CUDA_COMPUTE_CAPABILITIES=sm_35,sm_50,sm_60,sm_62,sm_70,sm_72,sm_75,sm_80,sm_86,compute_86
+    elif [[ ${cuda_compiler_version} == 11.2 || ${cuda_compiler_version} == 11.8 ]]; then
+        export TF_CUDA_COMPUTE_CAPABILITIES="${cuda_levels_details}"
     else
         echo "unsupported cuda version."
         exit 1
     fi
 
     export TF_CUDA_VERSION="${cuda_compiler_version}"
-    export TF_CUDNN_VERSION="${cudnn}"
-    export TF_CUDA_PATHS="${PREFIX},${CUDA_HOME}"
+    export TF_CUDNN_VERSION="8.8.1"
+    export TF_CUDA_PATHS="${CUDA_HOME},${PREFIX},/usr/include"
     export TF_NEED_CUDA=1
     export TF_NCCL_VERSION=$(pkg-config nccl --modversion | grep -Po '\d+\.\d+')
-
+    export CUDNN_INSTALL_PATH="${PREFIX}"
+    export NCCL_INSTALL_PATH="${PREFIX}"
     CUDA_ARGS="--enable_cuda \
                --enable_nccl \
-               --cuda_path=$CUDA_HOME \
-               --cudnn_path=$PREFIX   \
+               --cuda_path=${CUDA_HOME} \
+               --cudnn_path=${PREFIX}   \
                --cuda_compute_capabilities=$TF_CUDA_COMPUTE_CAPABILITIES \
                --cuda_version=$TF_CUDA_VERSION \
                --cudnn_version=$TF_CUDNN_VERSION"
@@ -72,7 +75,7 @@ export TF_SYSTEM_LIBS="boringssl,com_github_googlecloudplatform_google_cloud_cpp
 if [[ "${target_platform}" == "osx-arm64" ]]; then
   ${PYTHON} build/build.py --target_cpu_features default --enable_mkl_dnn --target_cpu ${TARGET_CPU}
 else
-  ${PYTHON} build/build.py --target_cpu_features default --enable_mkl_dnn ${CUDA_ARGS:-}
+  ${PYTHON} build/build.py --target_cpu_features default --enable_mkl_dnn ${CUDA_ARGS:-} --bazel_startup_options="--bazelrc=$SRC_DIR/.jax_configure.bazelrc"
 fi
 
 # Clean up to speedup postprocessing

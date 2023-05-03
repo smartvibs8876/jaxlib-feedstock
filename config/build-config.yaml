@@ -1,0 +1,7 @@
+recipes:
+  - name : jaxlib
+    path : recipe
+
+channels:
+  - defaults
+  - conda-forge               #[ppc64le and cudatoolkit == '11.2']
