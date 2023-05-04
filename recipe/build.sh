@@ -19,6 +19,39 @@ set -vex
 
 source open-ce-common-utils.sh
 
+if [[ $ppc_arch == "p10" ]]
+then
+    if [[ -z "${GCC_11_HOME}" ]];
+    then
+        echo "Please set GCC_11_HOME to the install path of gcc-toolset-11"
+        exit 1
+    else
+        export PATH=$GCC_11_HOME/bin:$PATH
+        export CC=$GCC_11_HOME/bin/gcc
+        export CXX=$GCC_11_HOME/bin/g++
+        export GCC=$CC
+        export GXX=$CXX
+        export AR=${GCC_11_HOME}/bin/ar
+        export LD=${GCC_11_HOME}/bin/ld
+        export NM=${GCC_11_HOME}/bin/nm
+        export OBJCOPY=${GCC_11_HOME}/bin/objcopy
+        export OBJDUMP=${GCC_11_HOME}/bin/objdump
+        export RANLIB=${GCC_11_HOME}/bin/ranlib
+        export STRIP=${GCC_11_HOME}/bin/strip
+        export READELF=${GCC_11_HOME}/bin/readelf
+        export HOST=powerpc64le-conda_cos7-linux-gnu
+        export BAZEL_LINKLIBS=-l%:libstdc++.a
+        export LDFLAGS=""
+        export CFLAGS="-mcpu=power9 -mtune=power10"
+        export CXXFLAGS="-mcpu=power9 -mtune=power10"
+        export CPPFLAGS="-mcpu=power9 -mtune=power10"
+        export CONDA_BUILD_SYSROOT=""
+    fi
+fi
+
+source gen-bazel-toolchain
+
+
 if [[ "${target_platform}" == osx-* ]]; then
   export LDFLAGS="${LDFLAGS} -lz -framework CoreFoundation -Xlinker -undefined -Xlinker dynamic_lookup"
 else
@@ -26,7 +59,6 @@ else
 fi
 export CFLAGS="${CFLAGS} -DNDEBUG"
 export CXXFLAGS="${CXXFLAGS} -DNDEBUG"
-source gen-bazel-toolchain
 
 cat >> .bazelrc <<EOF
 build --crosstool_top=//bazel_toolchain:toolchain
@@ -38,6 +70,7 @@ build --define=PROTOBUF_INCLUDE_PATH=${PREFIX}/include
 build --local_cpu_resources=${CPU_COUNT}"
 build --copt="-fplt"
 build --cxxopt="-fplt"
+build --action_env GCC_HOST_COMPILER_PATH="${CC}"
 EOF
 
 if [[ "${target_platform}" == "osx-arm64" ]]; then

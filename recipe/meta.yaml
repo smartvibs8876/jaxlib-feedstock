@@ -18,15 +18,15 @@ source:
     - patches/0001-custom-build.diff
     - patches/0002-bazelrc-edit.diff  # [cudatoolkit == '11.8' or cudatoolkit == '11.2']
     - patches/0003-Patched-openxla-for-tf_runtime.patch     #[s390x]
+    - patches/0001-Debug-log.patch
 
 build:
   number: 2
   string: cuda{{ cuda_compiler_version | replace('.', '') }}py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ PKG_BUILDNUM }}  # [cuda_compiler_version != "None"]
   string: cpu_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ PKG_BUILDNUM }}  # [cuda_compiler_version == "None"]
-{% if build_type == 'cuda' %}
   script_env:
-    - CUDA_HOME
-{% endif %}
+    - CUDA_HOME        #[build_type == "cuda"]
+    - GCC_11_HOME      #[ppc_arch == "p10"]
 
 
 requirements:
