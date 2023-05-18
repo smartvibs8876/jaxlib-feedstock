@@ -32,7 +32,7 @@ then
         export GCC=$CC
         export GXX=$CXX
         export AR=${GCC_11_HOME}/bin/ar
-        export LD=${GCC_11_HOME}/bin/ld
+        export LD=${GCC_11_HOME}/bin/ld.gold
         export NM=${GCC_11_HOME}/bin/nm
         export OBJCOPY=${GCC_11_HOME}/bin/objcopy
         export OBJDUMP=${GCC_11_HOME}/bin/objdump
@@ -41,24 +41,33 @@ then
         export READELF=${GCC_11_HOME}/bin/readelf
         export HOST=powerpc64le-conda_cos7-linux-gnu
         export BAZEL_LINKLIBS=-l%:libstdc++.a
-        export LDFLAGS=""
-        export CFLAGS="-mcpu=power9 -mtune=power10"
-        export CXXFLAGS="-mcpu=power9 -mtune=power10"
-        export CPPFLAGS="-mcpu=power9 -mtune=power10"
+
+        # Removing these libs so that jaxlib libraries link against libstdc++.so present on
+        # the system provided by gcc-toolset-11
+        rm ${PREFIX}/lib/libstdc++.so*
+        rm ${BUILD_PREFIX}/lib/libstdc++.so*
+#        export LDFLAGS="-Wl,-O2 -Wl,--sort-common -Wl,-S -fuse-ld=gold -Wl,-no-as-needed -Wl,-z,relro,-z,now -Wl,-rpath -B${GCC_11_HOME}/bin  -L${GCC_11_HOME}/lib -L$PREFIX/lib"
+#        export LDFLAGS="-Wl,-O2 -Wl,--sort-common -fuse-ld=gold -Wl,-no-as-needed -Wl,-z,relro,-z,now -B${GCC_11_HOME}/bin -L${GCC_11_HOME}/lib -L${PREFIX}/lib"
+#        export LDFLAGS="-Wl,-S -fuse-ld=gold -Wl,-no-as-needed -Wl,-z,relro,-z,now -B/opt/rh/gcc-toolset-11/root/usr/bin -lrt -fuse-ld=gold -L${GCC_11_HOME}/lib -L${PREFIX}/lib"
+        export LDFLAGS="-Wl,-S -fuse-ld=gold -Wl,-no-as-needed -Wl,-z,relro,-z,now -B/opt/rh/gcc-toolset-11/root/usr/bin -lrt -L${GCC_11_HOME}/lib -L${PREFIX}/lib"
+
+        export CXXFLAGS="${CXXFLAGS} -mcpu=power9 -mtune=power10 -mno-pcrel"
+        export CPPFLAGS="${CPPFLAGS} -mcpu=power9 -mtune=power10 -mno-pcrel"
+        export CFLAGS="${CFLAGS} -mcpu=power9 -mtune=power10 -mno-pcrel"       
+
         export CONDA_BUILD_SYSROOT=""
     fi
 fi
 
 source gen-bazel-toolchain
 
-
 if [[ "${target_platform}" == osx-* ]]; then
   export LDFLAGS="${LDFLAGS} -lz -framework CoreFoundation -Xlinker -undefined -Xlinker dynamic_lookup"
-else
-  export LDFLAGS="${LDFLAGS} -lrt"
 fi
 export CFLAGS="${CFLAGS} -DNDEBUG"
 export CXXFLAGS="${CXXFLAGS} -DNDEBUG"
+
+#source gen-bazel-toolchain
 
 cat >> .bazelrc <<EOF
 build --crosstool_top=//bazel_toolchain:toolchain
@@ -72,6 +81,19 @@ build --copt="-fplt"
 build --cxxopt="-fplt"
 build --action_env GCC_HOST_COMPILER_PATH="${CC}"
 EOF
+
+if [[ "${ARCH}" == 's390x' ]]; then
+echo "Building with more compiler flag for ${ARCH}"
+# extra compiler flag added for further optimization
+cat >> .bazelrc << EOF
+build:opt --copt=-O3
+build:opt --copt=-funroll-loops
+EOF
+else
+cat >> .bazelrc << EOF
+build --linkopt="-fuse-ld=gold"
+EOF
+fi
 
 if [[ "${target_platform}" == "osx-arm64" ]]; then
   echo "build --cpu=${TARGET_CPU}" >> .bazelrc
