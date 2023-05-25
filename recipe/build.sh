@@ -32,7 +32,7 @@ then
         export GCC=$CC
         export GXX=$CXX
         export AR=${GCC_11_HOME}/bin/ar
-        export LD=${GCC_11_HOME}/bin/ld.gold
+        export LD=${GCC_11_HOME}/bin/ld
         export NM=${GCC_11_HOME}/bin/nm
         export OBJCOPY=${GCC_11_HOME}/bin/objcopy
         export OBJDUMP=${GCC_11_HOME}/bin/objdump
@@ -46,14 +46,12 @@ then
         # the system provided by gcc-toolset-11
         rm ${PREFIX}/lib/libstdc++.so*
         rm ${BUILD_PREFIX}/lib/libstdc++.so*
-#        export LDFLAGS="-Wl,-O2 -Wl,--sort-common -Wl,-S -fuse-ld=gold -Wl,-no-as-needed -Wl,-z,relro,-z,now -Wl,-rpath -B${GCC_11_HOME}/bin  -L${GCC_11_HOME}/lib -L$PREFIX/lib"
-#        export LDFLAGS="-Wl,-O2 -Wl,--sort-common -fuse-ld=gold -Wl,-no-as-needed -Wl,-z,relro,-z,now -B${GCC_11_HOME}/bin -L${GCC_11_HOME}/lib -L${PREFIX}/lib"
-#        export LDFLAGS="-Wl,-S -fuse-ld=gold -Wl,-no-as-needed -Wl,-z,relro,-z,now -B/opt/rh/gcc-toolset-11/root/usr/bin -lrt -fuse-ld=gold -L${GCC_11_HOME}/lib -L${PREFIX}/lib"
-        export LDFLAGS="-Wl,-S -fuse-ld=gold -Wl,-no-as-needed -Wl,-z,relro,-z,now -B/opt/rh/gcc-toolset-11/root/usr/bin -lrt -L${GCC_11_HOME}/lib -L${PREFIX}/lib"
+        export LDFLAGS="-Wl,-O2 -Wl,-S -fuse-ld=gold -Wl,-no-as-needed -Wl,-z,now -B/opt/rh/gcc-toolset-11/root/usr/bin -lrt -L${GCC_11_HOME}/lib -L${PREFIX}/lib"
 
-        export CXXFLAGS="${CXXFLAGS} -mcpu=power9 -mtune=power10 -mno-pcrel"
-        export CPPFLAGS="${CPPFLAGS} -mcpu=power9 -mtune=power10 -mno-pcrel"
-        export CFLAGS="${CFLAGS} -mcpu=power9 -mtune=power10 -mno-pcrel"       
+#        export CXXFLAGS="${CXXFLAGS} -mcpu=power9 -mtune=power10 -U_FORTIFY_SOURCE -fstack-protector -Wall -Wunused-but-set-parameter -Wno-free-nonheap-object -fno-omit-frame-pointer -g0 -O2 '-D_FORTIFY_SOURCE=1' -DNDEBUG -ffunction-sections -fdata-sections '-std=c++0x' -DAUTOLOAD_DYNAMIC_KERNELS"
+        export CXXFLAGS="${CXXFLAGS} -mcpu=power9 -mtune=power10 -mno-pcrel -g0 -O2 -std=c++0x"
+        export CPPFLAGS="${CPPFLAGS} -mcpu=power9 -mtune=power10"
+        export CFLAGS="${CFLAGS} -mcpu=power9 -mtune=power10" 
 
         export CONDA_BUILD_SYSROOT=""
     fi
