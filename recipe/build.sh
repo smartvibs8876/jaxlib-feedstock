@@ -48,8 +48,7 @@ then
         rm ${BUILD_PREFIX}/lib/libstdc++.so*
         export LDFLAGS="-Wl,-O2 -Wl,-S -fuse-ld=gold -Wl,-no-as-needed -Wl,-z,now -B/opt/rh/gcc-toolset-11/root/usr/bin -lrt -L${GCC_11_HOME}/lib -L${PREFIX}/lib"
 
-#        export CXXFLAGS="${CXXFLAGS} -mcpu=power9 -mtune=power10 -U_FORTIFY_SOURCE -fstack-protector -Wall -Wunused-but-set-parameter -Wno-free-nonheap-object -fno-omit-frame-pointer -g0 -O2 '-D_FORTIFY_SOURCE=1' -DNDEBUG -ffunction-sections -fdata-sections '-std=c++0x' -DAUTOLOAD_DYNAMIC_KERNELS"
-        export CXXFLAGS="${CXXFLAGS} -mcpu=power9 -mtune=power10 -mno-pcrel -g0 -O2 -std=c++0x"
+        export CXXFLAGS="${CXXFLAGS} -mcpu=power9 -mtune=power10 -U_FORTIFY_SOURCE -fstack-protector -Wall -Wunused-but-set-parameter -Wno-free-nonheap-object -fno-omit-frame-pointer -g0 -O2 '-D_FORTIFY_SOURCE=1' -DNDEBUG -ffunction-sections -fdata-sections '-std=c++0x' -DAUTOLOAD_DYNAMIC_KERNELS"
         export CPPFLAGS="${CPPFLAGS} -mcpu=power9 -mtune=power10"
         export CFLAGS="${CFLAGS} -mcpu=power9 -mtune=power10" 
 
@@ -57,15 +56,12 @@ then
     fi
 fi
 
-source gen-bazel-toolchain
-
 if [[ "${target_platform}" == osx-* ]]; then
   export LDFLAGS="${LDFLAGS} -lz -framework CoreFoundation -Xlinker -undefined -Xlinker dynamic_lookup"
 fi
 export CFLAGS="${CFLAGS} -DNDEBUG"
-export CXXFLAGS="${CXXFLAGS} -DNDEBUG"
 
-#source gen-bazel-toolchain
+source gen-bazel-toolchain
 
 cat >> .bazelrc <<EOF
 build --crosstool_top=//bazel_toolchain:toolchain
