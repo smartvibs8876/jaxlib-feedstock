@@ -1,0 +1,25 @@
+From 1b975a6de26a173c98d8a18d73ab5321658c240c Mon Sep 17 00:00:00 2001
+From: Nishidha Panpaliya <npanpa23@in.ibm.com>
+Date: Thu, 4 May 2023 06:24:50 -0400
+Subject: [PATCH] Remove bazel shutdown call from jax code
+
+---
+ build/build.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/build/build.py b/build/build.py
+index 85e3c5e17..0fe54dddb 100755
+--- a/build/build.py
++++ b/build/build.py
+@@ -557,7 +557,7 @@ def main():
+     command += ["--editable"]
+   print(" ".join(command))
+   shell(command)
+-  shell([bazel_path] + args.bazel_startup_options + ["shutdown"])
++  #shell([bazel_path] + args.bazel_startup_options + ["shutdown"])
+ 
+ 
+ if __name__ == "__main__":
+-- 
+2.31.1
+

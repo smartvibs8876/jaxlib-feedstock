@@ -1,3 +1,4 @@
+#!/bin/bash
 # *****************************************************************
 # (C) Copyright IBM Corp. 2023. All Rights Reserved.
 #
@@ -13,9 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *****************************************************************
-#!/bin/bash
 
-set -vex
+set -ex
 
 source open-ce-common-utils.sh
 
