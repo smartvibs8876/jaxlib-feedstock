@@ -19,13 +19,48 @@ set -ex
 
 source open-ce-common-utils.sh
 
+if [[ $ppc_arch == "p10" ]]
+then
+    if [[ -z "${GCC_11_HOME}" ]];
+    then
+        echo "Please set GCC_11_HOME to the install path of gcc-toolset-11"
+        exit 1
+    else
+        export PATH=$GCC_11_HOME/bin:$PATH
+        export CC=$GCC_11_HOME/bin/gcc
+        export CXX=$GCC_11_HOME/bin/g++
+        export GCC=$CC
+        export GXX=$CXX
+        export AR=${GCC_11_HOME}/bin/ar
+        export LD=${GCC_11_HOME}/bin/ld
+        export NM=${GCC_11_HOME}/bin/nm
+        export OBJCOPY=${GCC_11_HOME}/bin/objcopy
+        export OBJDUMP=${GCC_11_HOME}/bin/objdump
+        export RANLIB=${GCC_11_HOME}/bin/ranlib
+        export STRIP=${GCC_11_HOME}/bin/strip
+        export READELF=${GCC_11_HOME}/bin/readelf
+        export HOST=powerpc64le-conda_cos7-linux-gnu
+        export BAZEL_LINKLIBS=-l%:libstdc++.a
+
+        # Removing these libs so that jaxlib libraries link against libstdc++.so present on
+        # the system provided by gcc-toolset-11
+        rm ${PREFIX}/lib/libstdc++.so*
+        rm ${BUILD_PREFIX}/lib/libstdc++.so*
+        export LDFLAGS="-Wl,-O2 -Wl,-S -fuse-ld=gold -Wl,-no-as-needed -Wl,-z,now -B/opt/rh/gcc-toolset-11/root/usr/bin -lrt -L${GCC_11_HOME}/lib -L${PREFIX}/lib"
+
+        export CXXFLAGS="${CXXFLAGS} -mcpu=power9 -mtune=power10 -U_FORTIFY_SOURCE -fstack-protector -Wall -Wunused-but-set-parameter -Wno-free-nonheap-object -fno-omit-frame-pointer -g0 -O2 '-D_FORTIFY_SOURCE=1' -DNDEBUG -ffunction-sections -fdata-sections '-std=c++0x' -DAUTOLOAD_DYNAMIC_KERNELS"
+        export CPPFLAGS="${CPPFLAGS} -mcpu=power9 -mtune=power10"
+        export CFLAGS="${CFLAGS} -mcpu=power9 -mtune=power10" 
+
+        export CONDA_BUILD_SYSROOT=""
+    fi
+fi
+
 if [[ "${target_platform}" == osx-* ]]; then
   export LDFLAGS="${LDFLAGS} -lz -framework CoreFoundation -Xlinker -undefined -Xlinker dynamic_lookup"
-else
-  export LDFLAGS="${LDFLAGS} -lrt"
 fi
 export CFLAGS="${CFLAGS} -DNDEBUG"
-export CXXFLAGS="${CXXFLAGS} -DNDEBUG"
+
 source gen-bazel-toolchain
 
 cat >> .bazelrc <<EOF
@@ -38,7 +73,21 @@ build --define=PROTOBUF_INCLUDE_PATH=${PREFIX}/include
 build --local_cpu_resources=${CPU_COUNT}"
 build --copt="-fplt"
 build --cxxopt="-fplt"
+build --action_env GCC_HOST_COMPILER_PATH="${CC}"
 EOF
+
+if [[ "${ARCH}" == 's390x' ]]; then
+echo "Building with more compiler flag for ${ARCH}"
+# extra compiler flag added for further optimization
+cat >> .bazelrc << EOF
+build:opt --copt=-O3
+build:opt --copt=-funroll-loops
+EOF
+else
+cat >> .bazelrc << EOF
+build --linkopt="-fuse-ld=gold"
+EOF
+fi
 
 if [[ "${target_platform}" == "osx-arm64" ]]; then
   echo "build --cpu=${TARGET_CPU}" >> .bazelrc
