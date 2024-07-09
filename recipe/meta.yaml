@@ -51,6 +51,7 @@ requirements:
     # list libabseil here to ensure pinning correctly
     - libabseil {{ abseil_cpp }}
     - build
+    - cudatoolkit {{ cudatoolkit }}            #[build_type == 'cuda']
   host:
     - cudnn {{ cudnn }}      # [build_type == 'cuda']
     - nccl {{ nccl }}        # [build_type == 'cuda']
@@ -66,6 +67,7 @@ requirements:
     - openssl
     - zlib {{ zlib }}
     - build
+    - cudatoolkit {{ cudatoolkit }}            #[build_type == 'cuda']
   run:
     - python
     - {{ pin_compatible('numpy') }}
@@ -75,6 +77,7 @@ requirements:
     - libopenblas {{ openblas }}
     - nccl {{ nccl }}           #[build_type == 'cuda']
     - ml_dtypes >=0.0.3
+    - cudatoolkit {{ cudatoolkit }}            #[build_type == 'cuda']
   run_constrained:
     - jax >={{ version }}
 
